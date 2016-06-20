@@ -1,1 +1,1 @@
-rake resque:work QUEUE=* VVERBOSE=1
+rake resque:work QUEUE=* VVERBOSE=1 COUNT=3

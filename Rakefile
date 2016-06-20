@@ -47,10 +47,18 @@ namespace :automata do
 	end
 
 	task :crawl do
-		# url = "http://thoughtware.tv"
-		url = "https://www.engadget.com/"
-		Resque.enqueue(Crawler, url, 1)
-		# scrape.fetch(url)
+		# urls  = ["http://www.kurzweilai.net/videos"]
+		urls  = [
+			 "https://www.engadget.com/",
+			 "http://www.kurzweilai.net/videos",
+			 "http://futurism.com/",
+			 "https://www.reddit.com/r/Futurism/",
+			 "http://ieet.org/index.php/IEET/media",
+			 "http://www.deepstuff.org/"
+		 ]
+		urls.each do |url|
+			Resque.enqueue(Crawler, url, 3)
+		end
 	end
 end
 

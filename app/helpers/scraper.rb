@@ -40,7 +40,9 @@ class Scraper
         # visited this url. Usually this will last about one hour.
         # We need to make sure we remember it here, so that if this url
         # links to itself, we won't be caught in a loop.
-        @memory.save_url(root_url)
+        if !@memory.visited? root_url
+            @memory.save_url(root_url)
+        end
 
         # Get links from this url
         links = []
@@ -59,16 +61,22 @@ class Scraper
           end
         end
 
-        # Link Filter: Pass 2 (discard duplicates on this page)
+        # save the totals, we'll use it later to know how many we filtered
         total = links.length
-        links.each do |link|
-          if link[:title].to_s.length > 0
-            puts link[:title].green
-          else
-            puts "[Untitled]".light_black
-          end
-          puts "\t#{link[:url]}".cyan
+        # Link Filter: Pass 2 (discard duplicates on this page)
+        links = links.group_by{|r|
+                r[:url]}.map do |k, v| v.inject({}) { |r, h|
+                r.merge(h){ |key, o, n| o || n } }
         end
+        #
+        # links.each do |link|
+        #   if link[:title].to_s.length > 0
+        #     puts link[:title].green
+        #   else
+        #     puts "[Untitled]".light_black
+        #   end
+        #   puts "\t#{link[:url]}".cyan
+        # end
 
         puts "Filtered a total of: #{total - links.length} out of #{total}."
 
@@ -88,12 +96,20 @@ class Scraper
                 if(same_domain(root_url, link[:url]))
                   if(!@memory.visited?(link[:url]))
                     puts "[Queuing]".green + " #{link[:url]}".cyan
+                    # remember all urls that are being visited so we don't
+                    # over-queue stuff that hasn't been visited but is
+                    # already queued for visiting.
+                    @memory.save_url(link[:url])
                     Resque.enqueue(Crawler, link[:url], @max_depth, @depth + 1)
                   else
-                    puts "[Visited]".yellow + " #{link[:url]}".light_black
+                    puts "[Skipping]".yellow + " #{link[:url]}".light_black
                   end
                 else
-                  puts "[External]".magenta + " #{link[:url]}".light_black
+                  # if not a traesure, it wont get saved and we can safely
+                  # document this as a non external link
+                  if (!@memory.is_treasure?(link[:url]))
+                    puts "[External]".magenta + " #{link[:url]}".light_black
+                  end
                 end
             end
         end
