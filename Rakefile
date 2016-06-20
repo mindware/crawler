@@ -19,6 +19,9 @@ Dir['./app/workers/*.rb',
 
 $db = Redis.new
 
+# testing adding a new logger
+# Redis.logger = Logger.new
+
 namespace :redis do
 	desc "Redis"
 	task :start do

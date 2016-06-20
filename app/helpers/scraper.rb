@@ -1,11 +1,15 @@
 require 'capybara'
 require 'capybara/dsl'
 require 'capybara/poltergeist'
+require 'colorize'
+require_relative '../models/memory'
 
 class Scraper
     include Capybara::DSL
 
     def initialize(max_depth=0, depth=0)
+      @memory = Memory.new
+
       if depth == max_depth
         puts "Crawling depth is at Maximum depth. No additional "+
              "crawling will be performed."
@@ -23,14 +27,20 @@ class Scraper
       Capybara.default_driver = :poltergeist
     end
 
-    def fetch(url)
+    def fetch(root_url)
         # if we got fed an invalid url, raise an exception.
-        if ! valid_url?(url)
-          raise Exception, "Cannot scrape an invalid URL: #{url}"
+        if ! valid_url?(root_url)
+          raise Exception, "Cannot scrape an invalid URL: #{root_url}"
         end
 
         # fetch the url
-        visit url
+        visit root_url
+
+        # Remember for a temporary term (defined in @Memory), that we've
+        # visited this url. Usually this will last about one hour.
+        # We need to make sure we remember it here, so that if this url
+        # links to itself, we won't be caught in a loop.
+        @memory.save_url(root_url)
 
         # Get links from this url
         links = []
@@ -62,6 +72,7 @@ class Scraper
 
         puts "Filtered a total of: #{total - links.length} out of #{total}."
 
+
         # Filter links that we've seen lately
 
         # Crawl
@@ -71,7 +82,19 @@ class Scraper
             # Later we may want to do this atomically for all links together
             # on redis, so that no link is added in case this worker dies
             links.each do |link|
-                Resque.enqueue(Crawler, link[:url], @max_depth, @depth + 1)
+                # if this link belongs to this domain. Only allow crawling
+                # for this specific site. Ignore external links and links
+                # that have already been visited recently.
+                if(same_domain(root_url, link[:url]))
+                  if(!@memory.visited?(link[:url]))
+                    puts "[Queuing]".green + " #{link[:url]}".cyan
+                    Resque.enqueue(Crawler, link[:url], @max_depth, @depth + 1)
+                  else
+                    puts "[Visited]".yellow + " #{link[:url]}".light_black
+                  end
+                else
+                  puts "[External]".magenta + " #{link[:url]}".light_black
+                end
             end
         end
     end

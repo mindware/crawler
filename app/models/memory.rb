@@ -1,15 +1,10 @@
-require 'public_suffix'
+require 'colorize'
+require_relative "../helpers/url"
 
 class Memory
 
   def initialize
     @default_term = 3600; # 1 hour
-  end
-
-  def get_domain(url)
-    # we should check this is a URL. Raise exception if not.
-    # return the root domain
-    PublicSuffix.domain(url, ignore_private: true)
   end
 
   # path for the set containing visited urls per domain.
@@ -36,6 +31,7 @@ class Memory
 
     # append the url to this set.
     # ie: set key: "automata:domain:thoughtware.tv" value: "http://youtube.com/1"
+    puts "[Memory]".blue + " Saving #{url.yellow} in #{domain_key.green}"
     $db.sadd(domain_key, url)
     $db.expire(domain_key, @default_term)
   end

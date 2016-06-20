@@ -1,7 +1,9 @@
+require 'colorize'
 require 'resque-retry'
 
 class Crawler
-	@queue = "automata"
+	@queue = "automata_crawl"
+
 	def self.perform(*args)
 		# grab the url
 		if args.length >= 1
@@ -28,5 +30,12 @@ class Crawler
 		Resque.logger.debug "Crawler is running on depth level #{depth} with a "+
 												"max depth of #{max_depth}."
 		Scraper.new(max_depth, depth).fetch(url)
+
+	# In case we shut down halfway, requeue.
+	rescue Resque::TermException
+		Resque.enqueue(self, args)
+	rescue Exception => e
+		puts "Error: #{e} ocurred\n#{e.backtrace.join("\n")}".red
+		logger.error "Error: #{e} ocurred while updating transaction"
 	end
 end

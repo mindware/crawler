@@ -14,9 +14,9 @@ gem 'colorize'
 
 # domain name parser for Ruby based on the Public Suffix List.
 # the way to properly validate domains.
-gem 'public_suffix'
+# gem 'public_suffix'
+gem 'domainatrix'
 
 gem 'redis'
 
 gem 'foreman'
-
