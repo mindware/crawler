@@ -16,7 +16,7 @@ Dir.chdir File.dirname(__FILE__)
 Dir['./app/workers/*.rb',
 	'./app/helpers/*.rb',
 	'./app/models/*.rb' ].each {|file| require file }
-	
+
 	$db = Redis.new
 
 	# testing adding a new logger

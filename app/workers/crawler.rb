@@ -28,10 +28,10 @@ class Crawler
 		end
 
 		Resque.logger.debug "Crawler is running on depth level #{depth} with a "+
-												"max depth of #{max_depth}."
+		"max depth of #{max_depth}."
 		Scraper.new(max_depth, depth).fetch(url)
 
-	# In case we shut down halfway, requeue.
+		# In case we shut down halfway, requeue.
 	rescue Resque::TermException
 		Resque.enqueue(self, args)
 	rescue Exception => e

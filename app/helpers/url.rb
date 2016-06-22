@@ -18,9 +18,9 @@ def get_domain(url)
   # return the root domain
   result= Domainatrix.parse(url)
   if (result.domain.to_s.length > 0 and result.public_suffix.to_s.length > 0)
-     return result.domain + "." + result.public_suffix
+    return result.domain + "." + result.public_suffix
   else
-     return nil
+    return nil
   end
 end
 
@@ -29,12 +29,12 @@ def same_domain(url1, url2)
   result2= Domainatrix.parse(url2)
   # if the public suffix and domain are the same and not nil
   if(result1.domain.to_s.length > 0 and
-     result2.domain.to_s.length > 0 and
-     result1.public_suffix.to_s.length > 0 and
-     result2.public_suffix.to_s.length > 0 and
-     result1.domain == result2.domain and
-     result2.public_suffix == result2.public_suffix)
-     return true
+    result2.domain.to_s.length > 0 and
+    result1.public_suffix.to_s.length > 0 and
+    result2.public_suffix.to_s.length > 0 and
+    result1.domain == result2.domain and
+    result2.public_suffix == result2.public_suffix)
+    return true
   else
     return false
   end
